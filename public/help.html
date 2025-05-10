@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Page d'Aide</title>
+    <link rel="stylesheet" href="/helpstyle.css">
+</head>
+<body>
+
+<div class="help-container">
+    <h1>Page d'Aide TFStock</h1>
+
+    <!-- Section 1 : Introduction -->
+    <section>
+        <h2>Introduction</h2>
+        <p>Cette page est un guide dans l'utilisation de TFStock. Plus bas les sections utiles pour vous aider.</p>
+    </section>
+
+    <!-- Section 2 : Fonctionnalités -->
+    <section>
+        <h2>Fonctionnalités</h2>
+        <p>TFStock permet de scanner des codes-barres, de gérer des produits et d'effectuer diverses actions. Facilement ajouter, retirer ou modifier les quantités des produits.</p>
+    </section>
+
+    <!-- Section 3 : Exemple -->
+    <section id="exemple">
+        <h2>Exemple d'utilisation</h2>
+        <p>Exemple d'utilisation du scanner de code-barres. Scannez un produit, et la quantité disponible est automatiquement mise à jour dans notre base de données.</p>
+    </section>
+
+
+    <!-- Boutons -->
+    <button onclick="window.history.back()">Retour</button>
+    <button id="exemple-btn" onclick="openExemplePage()">Voir l'exemple</button>
+</div>
+
+
+<script>
+    function openExemplePage() {
+        window.location.href = '/exemple.html';  // Redirige vers une page d'aide
+    }
+</script>
+
+</body>
+</html>

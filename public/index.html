@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Scan produit</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+<h2>Scanner un produit</h2>
+<input type="text" id="barcode" placeholder="Scanner ou entrer un code-barres" autofocus>
+
+<div id="products-list">
+  <h3>Liste des produits</h3>
+  <table id="products-table">
+    <thead>
+    <tr>
+      <th>Barcode</th>
+      <th>Categorie</th>
+      <th>Description</th>
+      <th>Quantité</th>
+      <th>BarcodeImage</th> <!-- Utiliser jsbarcode ici -->
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Les produits seront insérés ici -->
+    </tbody>
+  </table>
+</div>
+
+<button id="help-btn" onclick="openHelpPage()">Aide</button>
+
+
+<script>
+  function openHelpPage() {
+    window.location.href = '/help.html';  // Redirige vers une page d'aide
+  }
+
+
+  const input = document.getElementById('barcode');
+
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      const barcode = input.value.trim();
+      if (!barcode) return;
+
+      fetch('/check-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barcode })
+      })
+              .then(res => res.json())
+              .then(data => {
+                console.log("Received data from server:", data);
+                input.value = '';
+
+                if (!data.exists) {
+                  showPopup({
+                    title: "Produit inconnu",
+                    desc: "Ce code-barre n'existe pas encore dans la base de données.",
+                    actions: [
+                      {
+                        label: "Ajouter produit",
+                        callback: () => openCreateProductForm(barcode)
+                      }
+                    ]
+                  });
+                  return;
+                }
+
+                showPopup({
+                  title: "Produit trouvé",
+                  desc: `    <strong>Code-barres :</strong> ${data.barcode}<br>
+        <strong>Catégorie :</strong> ${data.categorie}<br>
+    <strong>Description :</strong> ${data.description}<br>
+    <strong>Quantité actuelle :</strong> ${data.quantite}`,
+                  actions: [
+                    {
+                      label: "Ajouter",
+                      callback: () => demanderQuantiteEtMettreAJour(barcode, 'add')
+                    },
+                    {
+                      label: "Retirer",
+                      callback: () => demanderQuantiteEtMettreAJour(barcode, 'remove')
+                    }
+                  ]
+                });
+              })
+              .catch(err => {
+                alert("Erreur : " + err.message);
+                console.error(err);
+              });
+    }
+  });
+
+  function demanderQuantiteEtMettreAJour(barcode, action) {
+    const quantite = prompt("Quantité à " + (action === 'add' ? "ajouter" : "retirer"), "1");
+    if (!quantite || isNaN(quantite)) return alert("Quantité invalide.");
+
+    fetch('/update-stock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barcode, quantity: quantite, action })
+    })
+            .then(res => res.json())
+            .then(response => {
+              showPopup({
+                title: "Succès",
+                desc: `Stock mis à jour.<br>Nouvelle quantité : ${response.newQuantity}`,
+                actions: []
+              });
+              setTimeout(() => {
+                window.location.reload(); // Recharge la page après une seconde
+              }, "1000");
+            })
+            .catch(err => {
+              alert("Erreur lors de la mise à jour : " + err.message);
+            });
+  }
+
+  function showPopup({ title, desc, actions = [] }) {
+    document.getElementById('popup-title').textContent = title;
+    document.getElementById('popup-desc').innerHTML = desc;
+
+    const container = document.getElementById('popup-actions');
+    container.innerHTML = '';
+    actions.forEach(({ label, callback }) => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.onclick = callback;  // L'appel à callback ne fermera pas le popup maintenant
+      container.appendChild(btn);
+    });
+
+    const popup = document.getElementById('popup');
+    console.log("Showing popup", popup);
+
+    // Force display of popup
+    popup.style.display = 'flex';  // Assurez-vous qu'il s'affiche
+  }
+
+  function closePopup() {
+    const popup = document.getElementById('popup');
+    console.log("Closing popup", popup);
+    popup.style.display = 'none';
+    setTimeout(() => {
+      window.location.reload(); // Recharge la page après une seconde
+    }, "1000");
+  }
+
+  function openCreateProductForm(barcode) {
+    console.log("openCreateProductForm called with barcode:", barcode); // Debugging line
+
+    const popupContent = document.getElementById('popup-content');
+    popupContent.innerHTML = `
+      <h3>Créer un nouveau produit</h3>
+      <div class="form-group">
+        <label for="product-name">Nom du produit</label>
+    <select id="product-name" required onchange="toggleOtherField()">
+        <option value="">Choisissez un produit</option>
+        <option value="Produit1">Produit 1</option>
+        <option value="Produit2">Produit 2</option>
+        <option value="Produit3">Produit 3</option>
+        <option value="other">Autre</option> <!-- Option "Autre" -->
+    </select>
+      </div>
+      <div class="form-group">
+        <label for="product-description">Description</label>
+        <input type="text" id="product-description" placeholder="Description du produit" required>
+      </div>
+
+      <div class="form-group" id="other-product-container" style="display: none;">
+    <label for="other-product-name">Précisez le nom du produit</label>
+    <input type="text" id="other-product-name" placeholder="Entrez un autre produit" />
+</div>
+
+      <div class="form-group">
+        <label for="product-quantity">Quantité initiale</label>
+        <input type="number" id="product-quantity" value="1" min="1" max="9999" step="1" required>
+      </div>
+      <button id="submit-create-product" onclick="createProduct('${barcode}')">Ajouter le produit</button>
+      <button onclick="closePopup()">Annuler</button>
+    `;
+    const popup = document.getElementById('popup');
+    console.log("Popup content updated, showing popup...");
+    popup.style.display = 'flex';  // Afficher le popup
+  }
+
+  function createProduct(barcode) {
+    const categorie = document.getElementById('product-name').value.trim();
+    const description = document.getElementById('product-description').value.trim();
+    const quantite = parseInt(document.getElementById('product-quantity').value.trim(), 10);
+    console.log("Quantité récupérée côté frontend:", quantite);  // Vérifie ici
+
+    if (!categorie || !description) {
+      alert("Le nom et la description sont requis.");
+      return;
+    }
+
+    console.log("Creating product with barcode:", barcode, "categorie:", categorie, "description:", description, "quantite:", quantite);
+
+    fetch('/create-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barcode, categorie, description, quantite })
+    })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                alert((data.message || "Produit créé avec succès."))
+                closePopup();
+                setTimeout(() => {
+                  window.location.reload(); // Recharge la page après une seconde
+                }, "1000");
+              } else {
+                alert("Erreur lors de la création du produit.");
+                setTimeout(() => {
+                  window.location.reload(); // Recharge la page après une seconde
+                }, "1000");
+              }
+            })
+            .catch(err => {
+              alert("Erreur : " + err.message);
+            });
+  }
+
+  function toggleOtherField() {
+    const selectElement = document.getElementById('product-name');
+    const otherFieldContainer = document.getElementById('other-product-container');
+    const selectedValue = selectElement.value;
+
+    if (selectedValue === 'other') {
+      otherFieldContainer.style.display = 'block'; // Affiche le champ texte
+    } else {
+      otherFieldContainer.style.display = 'none'; // Cache le champ texte
+    }
+  }
+
+  function printBarcode(barcode) {
+    const printWindow = window.open('', '', 'width=600,height=400');  // Créer une nouvelle fenêtre pour l'impression
+    printWindow.document.write('<html><head><title>Impression Code-barres</title></head><body>');
+    printWindow.document.write('<h3>Code-barres: ' + barcode + '</h3>');  // Titre avec le code-barres
+
+    // Créer un élément canvas pour afficher le code-barres
+    const barcodeCanvas = printWindow.document.createElement('canvas');
+    printWindow.document.body.appendChild(barcodeCanvas);  // Ajoute l'élément canvas au corps de la page d'impression
+
+    // Utiliser JsBarcode pour générer le code-barres sur le canvas
+    JsBarcode(barcodeCanvas, barcode, {
+      format: "CODE128",
+      lineColor: "#000000",
+      width: 1,  // Augmenter la largeur pour plus de lisibilité
+      height: 80,  // Ajuster la hauteur pour les rendre plus visibles
+      displayValue: true,
+      fontSize: 20,  // Taille de la police pour les valeurs sous le code-barres
+      margin: 10  // Espacement autour du code-barres pour éviter que la lecture soit coupée
+    });
+
+    // Ajouter un bouton "Fermer" dans la fenêtre d'impression
+    const closeButton = printWindow.document.createElement('button');
+    closeButton.textContent = "Fermer";
+    closeButton.onclick = function() {
+      printWindow.close();  // Ferme la fenêtre d'impression
+    };
+    printWindow.document.body.appendChild(closeButton);
+
+    // Ajouter le reste du contenu HTML
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();  // Ferme le document pour charger le contenu
+    printWindow.print();  // Ouvre la boîte de dialogue d'impression
+  }
+
+  // Fonction pour récupérer tous les produits
+  function fetchProducts() {
+    fetch('/get-products')
+            .then(res => res.json())
+            .then(data => {
+              const productsTable = document.getElementById('products-table').getElementsByTagName('tbody')[0];
+              productsTable.innerHTML = '';  // Vide le tableau avant de le remplir avec les nouvelles données
+
+              data.forEach(product => {
+                const row = productsTable.insertRow();
+
+                const barcodeCell = row.insertCell(0);
+                barcodeCell.classList.add('barcode-cell');  // Ajouter la classe "barcode-cell" pour appliquer le style de survol
+                const nameCell = row.insertCell(1);
+                const descriptionCell = row.insertCell(2);
+                const quantityCell = row.insertCell(3);
+                const barcodeImageCell = row.insertCell(4); // Nouvelle cellule pour l'image du barcode
+                barcodeImageCell.classList.add('barcode-image-cell'); // Ajouter une classe spécifique à la cellule contenant l'image
+
+                barcodeCell.textContent = product.barcode;
+                nameCell.textContent = product.categorie;
+                descriptionCell.textContent = product.description;
+                quantityCell.textContent = product.quantite;
+
+                // Générer l'image du code-barres pour chaque produit
+                const barcodeImage = document.createElement('img');
+                JsBarcode(barcodeImage, product.barcode, {
+                  format: "CODE128",
+                  lineColor: "#000000",
+                  width: 1,  // Augmenter la largeur pour plus de lisibilité
+                  height: 80,  // Ajuster la hauteur pour les rendre plus visibles
+                  displayValue: true,
+                  fontSize: 20,  // Taille de la police pour les valeurs sous le code-barres
+                  margin: 10  // Espacement autour du code-barres pour éviter que la lecture soit coupée
+                });
+
+                barcodeImage.alt = `Code-barres pour ${product.barcode}`;
+                barcodeImage.style.width = '125px';  // Ajuste la taille de l'image
+                barcodeImage.style.height = 'auto';
+
+                // Ajouter l'image du code-barres à la cellule
+                barcodeImageCell.appendChild(barcodeImage);
+
+// Ajouter un événement de clic sur le texte du barcode pour le remplir dans le champ input
+                barcodeCell.addEventListener('click', function() {
+                  const inputField = document.getElementById('barcode');
+                  inputField.value = product.barcode;  // Remplir le champ input avec le code-barres
+
+                  // Simuler un appui sur la touche "Entrée"
+                  const enterEvent = new KeyboardEvent('keydown', {
+                    key: 'Enter',
+                    keyCode: 13,  // Code de la touche "Entrée"
+                    which: 13,    // Code de la touche "Entrée"
+                    bubbles: true
+                  });
+                  inputField.dispatchEvent(enterEvent);  // Déclenche l'événement "keydown" pour simuler l'Entrée
+                });
+
+                // Ajouter un événement de clic uniquement sur l'image pour imprimer le code-barres
+                barcodeImage.addEventListener('click', function() {
+                  printBarcode(product.barcode);  // Appeler la fonction d'impression en cliquant sur l'image du code-barres
+                });
+
+              });
+
+            })
+            .catch(err => {
+              console.error('Erreur lors de la récupération des produits', err);
+            });
+  }
+
+
+  // Appeler la fonction pour récupérer et afficher les produits dès que la page est chargée
+  document.addEventListener('DOMContentLoaded', fetchProducts);
+
+</script>
+
+<div id="popup" class="popup">
+  <div id="popup-content" class="popup-content">
+    <h3 id="popup-title"></h3>
+    <p id="popup-desc"></p>
+    <div id="popup-actions"></div>
+    <button onclick="closePopup()">Retour</button>
+  </div>
+</div>
+
+</body>
+</html>

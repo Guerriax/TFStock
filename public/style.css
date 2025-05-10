@@ -1,0 +1,230 @@
+/* ------------------------------ GLOBAL STYLES ------------------------------ */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+h2, h3 {
+    text-align: center;
+    color: #333;
+}
+
+input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f4f4f4;
+    color: #555;
+}
+
+table tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* ------------------------------ POPUP STYLES ------------------------------ */
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.popup-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+.popup-content h3 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.popup-content p {
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.popup-content button {
+    margin: 5px 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.popup-content button:hover {
+    background-color: #ddd;
+}
+
+#popup-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* ------------------------------ FORM STYLES ------------------------------ */
+.form-group {
+    margin-bottom: 15px;
+}
+
+#other-product-container {
+    margin-top: 10px;
+}
+
+select {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+input[type="text"] {
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+input[type="number"] {
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+}
+
+#product-name {
+    width: 100%;
+}
+
+#other-product-container input {
+    width: 100%;
+    background: yellow;
+}
+
+/* ------------------------------ BUTTONS ------------------------------ */
+.cancel-btn {
+    background-color: #f44336;
+}
+
+.cancel-btn:hover {
+    background-color: #e53935;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    table th, table td {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
+
+#products-table td.barcode-cell {
+    cursor: pointer;
+    background-color: #4CAF50;  /* Couleur de fond verte (comme un bouton) */
+    color: white;  /* Texte blanc pour contraster avec le fond vert */
+    padding: 10px 15px;  /* Espacement autour du texte pour lui donner un effet de bouton */
+    border-radius: 5px;  /* Coins arrondis */
+    text-align: center;  /* Centrer le texte dans la cellule */
+    transition: background-color 0.3s ease, transform 0.3s ease;  /* Transition pour un effet doux */
+}
+
+#products-table td.barcode-cell:hover {
+    background-color: #45a049;  /* Une nuance légèrement plus sombre de vert au survol */
+    transform: scale(1.05);  /* Un léger agrandissement au survol pour l'effet de bouton */
+}
+
+#products-table td.barcode-cell:active {
+    background-color: #388e3c;  /* Couleur encore plus sombre lors du clic */
+    transform: scale(1);  /* Retour à la taille normale lorsqu'on clique */
+}
+
+/* Appliquer le curseur imprimante uniquement sur l'image du code-barres */
+#products-table td img:hover {
+    cursor: url('./assets/imprimante.svg') 16 16, pointer;  /* 16 16 définit la position du hotspot */
+}
+
+#help-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#help-btn:hover {
+    background-color: #45a049;
+}

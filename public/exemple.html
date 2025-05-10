@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Scanner un produit</title>
+    <link rel="stylesheet" href="exemple.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <style>
+        /* Style pour le champ de texte */
+        #barcode {
+            width: 300px;
+            padding: 10px;
+            font-size: 18px;
+            margin-top: 50px;
+            transition: all 0.5s ease;
+        }
+
+        /* Style pour faire un effet de déplacement du curseur */
+        @keyframes moveCursor {
+            0% {
+                left: 0;
+            }
+            100% {
+                left: 350px; /* Déplacement vers le champ de texte */
+            }
+        }
+
+        /* Animation du curseur */
+        #cursor {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-color: black;
+            border-radius: 50%;
+            animation: moveCursor 2s forwards;
+        }
+    </style>
+</head>
+<body>
+<h2>Scanner un produit</h2>
+
+<!-- Affichage du curseur en mouvement -->
+<div id="cursor"></div>
+
+<!-- Champ de saisie du code-barres -->
+<input type="text" id="barcode" placeholder="Scanner ou entrer un code-barres" autofocus>
+
+<div id="products-list">
+    <h3>Liste des produits</h3>
+    <table id="products-table">
+        <thead>
+        <tr>
+            <th>Barcode</th>
+            <th>Categorie</th>
+            <th>Description</th>
+            <th>Quantité</th>
+            <th>BarcodeImage</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Les produits seront insérés ici -->
+        </tbody>
+    </table>
+</div>
+
+<button id="help-btn" onclick="openMainPage()">Retour au menu principal</button>
+
+<script>
+    function openMainPage() {
+        window.location.href = '/index.html';  // Redirige vers une page d'aide
+    }
+
+    const input = document.getElementById('barcode');
+
+    setTimeout(() => {
+        const codeBarres = '1234567890';  // Code-barres simulé
+        let index = 0;
+        let interval = setInterval(() => {
+            input.value += codeBarres[index];  // Ajouter une lettre à la fois
+            index++;
+            if (index === codeBarres.length) {
+                clearInterval(interval);  // Arrêter après avoir ajouté toutes les lettres
+                // Simuler l'appui sur la touche "Entrée"
+                const event = new KeyboardEvent('keydown', {
+                    key: 'Enter',
+                    keyCode: 13,
+                    which: 13,
+                    bubbles: true
+                });
+                input.dispatchEvent(event);  // Déclencher l'événement "keydown"
+            }
+        }, 200);  // Chaque lettre est ajoutée toutes les 200ms
+    }, 2500);  // Attendre que le curseur ait fini de se déplacer
+
+    // Cette fonction est appelée lorsqu'on essaie d'ajouter un produit
+    function simulateProductAddition() {
+        const barcode = '1234567890';  // Code-barres simulé
+        const data = { exists: false };  // Simuler que le produit n'existe pas encore dans la base de données
+
+        if (!data.exists) {
+            setTimeout(() => {
+                showPopup({
+                    title: "Produit inconnu",
+                    desc: "Ce code-barre n'existe pas encore dans la base de données.",
+                    actions: [
+                        {
+                            label: "Ajouter produit",
+                            callback: () => openCreateProductForm(barcode)  // Ouvrir le formulaire d'ajout du produit
+                        }
+                    ]
+                });
+                return;
+            }, 5000);
+            // Simuler l'apparition du pop-up pour un produit inconnu
+
+        }
+    }
+
+    // Cette fonction ouvre le formulaire d'ajout d'un produit et le remplit automatiquement
+    function openCreateProductForm(barcode) {
+        console.log("openCreateProductForm called with barcode:", barcode); // Debugging line
+
+        const popupContent = document.getElementById('popup-content');
+        popupContent.innerHTML = `
+      <h3>Créer un nouveau produit</h3>
+      <div class="form-group">
+        <label for="product-name">Nom du produit</label>
+        <select id="product-name" required onchange="toggleOtherField()">
+          <option value="">Choisissez un produit</option>
+          <option value="Produit1">Produit 1</option>
+          <option value="Produit2">Produit 2</option>
+          <option value="Produit3">Produit 3</option>
+          <option value="other">Autre</option> <!-- Option "Autre" -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="product-description">Description</label>
+        <input type="text" id="product-description" placeholder="Description du produit" required>
+      </div>
+      <div class="form-group" id="other-product-container" style="display: none;">
+        <label for="other-product-name">Précisez le nom du produit</label>
+        <input type="text" id="other-product-name" placeholder="Entrez un autre produit" />
+      </div>
+      <div class="form-group">
+        <label for="product-quantity">Quantité initiale</label>
+        <input type="number" id="product-quantity" value="1" min="1" max="9999" step="1" required>
+      </div>
+      <button id="submit-create-product" onclick="createProduct('${barcode}')">Ajouter le produit</button>
+      <button onclick="closePopup()">Annuler</button>
+    `;
+
+        // Remplir les champs automatiquement (exemples de valeurs par défaut)
+        setTimeout(() => {
+            // Sélectionner un produit existant ou remplir les champs
+            document.getElementById('product-name').value = 'Produit1'; // Choisir un produit prédéfini
+            document.getElementById('product-description').value = 'Description du produit 1';  // Description du produit
+            document.getElementById('product-quantity').value = 10;  // Quantité par défaut
+
+            // Simuler la sélection d'une option autre (si nécessaire)
+            document.getElementById('other-product-name').style.display = 'none';  // Masquer le champ "Autre"
+            document.getElementById('other-product-container').style.display = 'none';  // Masquer la section "Autre"
+
+            // Automatiser le clic sur le bouton "Ajouter le produit"
+            document.getElementById('submit-create-product').click();  // Simuler le clic sur le bouton
+        }, 1000);  // Remplir les champs après une courte pause pour simuler la saisie
+
+        // Afficher le pop-up
+        const popup = document.getElementById('popup');
+        popup.style.display = 'flex';
+    }
+
+    // Fonction de création du produit (appelée après l'ajout du produit)
+    function createProduct(barcode) {
+        console.log("Produit créé avec code-barres:", barcode);
+        // Logique pour ajouter le produit à la base de données (envoi via API, par exemple)
+        // Pour la simulation, on peut afficher un message de succès
+
+        showPopup({
+            title: "Produit ajouté",
+            desc: `Le produit avec le code-barres ${barcode} a été ajouté.`,
+            actions: []
+        });
+
+        // Fermer le pop-up après un certain délai
+        setTimeout(() => {
+            closePopup();
+        }, 2000);
+    }
+
+    // Fonction pour fermer le pop-up
+    function closePopup() {
+        const popup = document.getElementById('popup');
+        popup.style.display = 'none';
+    }
+
+    // Fonction pour afficher le pop-up
+    function showPopup({ title, desc, actions = [] }) {
+        document.getElementById('popup-title').textContent = title;
+        document.getElementById('popup-desc').innerHTML = desc;
+
+        const container = document.getElementById('popup-actions');
+        container.innerHTML = '';
+        actions.forEach(({ label, callback }) => {
+            const btn = document.createElement('button');
+            btn.textContent = label;
+            btn.onclick = callback;
+            container.appendChild(btn);
+        });
+
+        const popup = document.getElementById('popup');
+        popup.style.display = 'flex';
+    }
+
+    // Lancer la simulation dès le chargement de la page
+    window.addEventListener('DOMContentLoaded', function () {
+        simulateProductAddition();
+    });
+</script>
+
+
+<div id="popup" class="popup">
+    <div id="popup-content" class="popup-content">
+        <h3 id="popup-title"></h3>
+        <p id="popup-desc"></p>
+        <div id="popup-actions"></div>
+        <button onclick="closePopup()">Retour</button>
+    </div>
+</div>
+
+</body>
+</html>
