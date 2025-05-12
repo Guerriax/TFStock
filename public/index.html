@@ -211,9 +211,18 @@
         <label for="product-name">Nom du produit</label>
     <select id="product-name" required onchange="handleSelectChange()">
         <option value="">Choisissez un produit</option>
+        <option disabled>------------------------- Ordinateurs Complet</option>
         <option value="Produit1">PC Portable</option>
         <option value="Produit2">PC Fixe</option>
-        <option value="Produit3">Produit 3</option>
+        <option disabled>------------------------- Matériel</option>
+        <option value="Ecrans">Ecrans</option>
+        <option value="Peripheriques">Peripheriques</option>
+        <option value="Composants PC">Composants PC</option>
+        <option value="Accessoires">Accessoires</option>
+        <option value="RGB">RGB</option>
+        <option value="Telephones">Telephones</option>
+        // Ajouter une barre de séparation
+        <option disabled>------------------------- Autre</option>
         <option value="other">Autre (précisé)</option> <!-- Option "Autre" -->
     </select>
       </div>
@@ -355,9 +364,11 @@
       nvme: stockage_type_nvme
     };
 
-    if (!ram_type || !ram_type || !stockage_size || !cpu || !gpu || !stockageType) {
-      alert("Tous les champs doivent être remplis.");
-      return;
+    if (categorie === 'Produit1' || categorie === 'Produit2') {
+      if (!ram_type || !ram_type || !stockage_size || !cpu || !gpu || !stockageType) {
+        alert("Tous les champs doivent être remplis.");
+        return;
+      }
     }
 
     if (!description || description === "") {
@@ -557,6 +568,9 @@
                 barcodeImage.alt = `Code-barres pour ${product.barcode}`;
                 barcodeImage.style.width = '125px';  // Ajuste la taille de l'image du code-barres
                 barcodeImageCell.appendChild(barcodeImage);
+                barcodeImageCell.addEventListener('click', function() {
+                  printBarcode(product.barcode);  // Lorsque l'on clique sur l'image, imprimer le code-barres correspondant
+                });
               });
             })
             .catch(err => {
