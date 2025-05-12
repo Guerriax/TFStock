@@ -69,6 +69,23 @@ router.post('/update-stock', (req, res) => {
     });
 });
 
+router.post('/delete-product', (req, res) => {
+    const { barcode } = req.body;
+
+    // Si on reçoit "ALL", on supprime tout
+    const sql = barcode === 'ALL' ? 'DELETE FROM produits' : 'DELETE FROM produits WHERE barcode = ?';
+    const params = barcode === 'ALL' ? [] : [barcode];
+
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Erreur lors de la suppression des produits' });
+        }
+        res.json({ success: true });
+    });
+});
+
+
 router.post('/check-product', (req, res) => {
     const { barcode } = req.body;
 
@@ -88,7 +105,14 @@ router.post('/check-product', (req, res) => {
                 nom: null,
                 description: null,
                 categorie: null,
-                quantite: 0
+                quantite: 0,
+                cpu: null,
+                gpu: null,
+                ram_size: null,
+                ram_type: null,
+                stockage_type: null,
+                stockage_size: null,
+                rgb: null
             });
         }
 
@@ -99,37 +123,35 @@ router.post('/check-product', (req, res) => {
             barcode: produit.barcode,
             categorie: produit.categorie,
             description: produit.description,
-            quantite: produit.quantite
+            quantite: produit.quantite,
+            cpu: produit.cpu,
+            gpu: produit.gpu,
+            ram_size: produit.ram_size,
+            ram_type: produit.ram_type,
+            stockage_type: produit.stockage_type,
+            stockage_size: produit.stockage_size,
+            rgb: produit.rgb
         });
     });
 });
 
 router.post('/create-product', (req, res) => {
-    const { barcode, categorie, description, quantite} = req.body;
+    const { barcode, categorie, description, quantite, ram_size, ram_type, stockage_type, stockage_size, cpu, gpu, rgb } = req.body;
 
-    if(!barcode || !categorie || !description || !quantite){
-        return res.status(400).json({error:'Plusieurs champs manquant'})
-    }
 
+    console.log(stockage_type);
     console.log("Quantité reçue côté backend:", quantite);  // Vérifie ici
+
 
     if(!barcode) {
         return res.status(400).json({error:'Code-barres manquant'})
     }
 
-    if(!categorie) {
-        return res.status(400).json({error:'Nom manquant'})
-    }
+    // Convertir stockage_type en chaîne JSON si c'est un objet
+    const stockage_type_string = JSON.stringify(stockage_type);
 
-    if(!description) {
-        return res.status(400).json({error:'Description manquante'})
-    }
 
-    if(!quantite){
-        return res.status(400).json({error:'Quantité manquante'})
-    }
-
-    db.query('INSERT INTO produits (barcode, categorie, description, quantite) VALUES (?, ?, ?, ?)', [barcode, categorie, description, quantite], (err, result) => {
+    db.query('INSERT INTO produits (barcode, categorie, description, quantite, ram_size, ram_type, stockage_type, stockage_size, cpu, gpu, rgb) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )', [barcode, categorie, description, quantite, ram_size, ram_type, stockage_type_string, stockage_size, cpu, gpu, rgb], (err, result) => {
             if (err) {
                 console.error(err);
                 return res.status(500).json({ error: 'Erreur de base de données.' });

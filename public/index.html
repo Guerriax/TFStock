@@ -28,6 +28,8 @@
   </table>
 </div>
 
+<button id="del-btn" onclick="deleteDataBase()">Vider la base de données</button>
+
 <button id="help-btn" onclick="openHelpPage()">Aide</button>
 
 
@@ -35,6 +37,54 @@
   function openHelpPage() {
     window.location.href = '/help.html';  // Redirige vers une page d'aide
   }
+
+  function deleteDataBase() {
+    showPopup({
+      title: "Confirmez-vous ?",
+      desc: "Cette action va vider votre base de données.",
+      actions: [
+        {
+          label: "Oui",
+          callback: () => {
+            showPopup({
+              title: "Êtes-vous vraiment sûr ?",
+              desc: "Cette action est <strong>irréversible</strong>. Confirmez la suppression totale.",
+              actions: [
+                {
+                  label: "Oui, supprimer",
+                  callback: () => {
+                    console.log("Deleting database...");
+                    fetch('/delete-product', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ barcode: 'ALL' })
+                    })
+                            .then(res => res.json())
+                            .then(data => {
+                              if (data.success) {
+                                alert("Base de données vidée avec succès.");
+                                location.reload();
+                              } else {
+                                alert("Une erreur est survenue lors de la suppression.");
+                              }
+                            })
+                            .catch(error => {
+                              console.error("Erreur lors de la suppression :", error);
+                            });
+                  }
+                }
+              ]
+            });
+          }
+        }
+      ]
+    });
+  }
+
+
+
 
 
   const input = document.getElementById('barcode');
@@ -111,7 +161,7 @@
               });
               setTimeout(() => {
                 window.location.reload(); // Recharge la page après une seconde
-              }, "1000");
+              }, 3000);
             })
             .catch(err => {
               alert("Erreur lors de la mise à jour : " + err.message);
@@ -138,13 +188,17 @@
     popup.style.display = 'flex';  // Assurez-vous qu'il s'affiche
   }
 
+  function descPopup(desc) {
+
+  }
+
   function closePopup() {
     const popup = document.getElementById('popup');
     console.log("Closing popup", popup);
     popup.style.display = 'none';
     setTimeout(() => {
       window.location.reload(); // Recharge la page après une seconde
-    }, "1000");
+    }, 300);
   }
 
   function openCreateProductForm(barcode) {
@@ -155,22 +209,63 @@
       <h3>Créer un nouveau produit</h3>
       <div class="form-group">
         <label for="product-name">Nom du produit</label>
-    <select id="product-name" required onchange="toggleOtherField()">
+    <select id="product-name" required onchange="handleSelectChange()">
         <option value="">Choisissez un produit</option>
-        <option value="Produit1">Produit 1</option>
-        <option value="Produit2">Produit 2</option>
+        <option value="Produit1">PC Portable</option>
+        <option value="Produit2">PC Fixe</option>
         <option value="Produit3">Produit 3</option>
-        <option value="other">Autre</option> <!-- Option "Autre" -->
+        <option value="other">Autre (précisé)</option> <!-- Option "Autre" -->
     </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" id="description-container" style="display: block;">
         <label for="product-description">Description</label>
         <input type="text" id="product-description" placeholder="Description du produit" required>
       </div>
 
       <div class="form-group" id="other-product-container" style="display: none;">
-    <label for="other-product-name">Précisez le nom du produit</label>
-    <input type="text" id="other-product-name" placeholder="Entrez un autre produit" />
+    <label for="other-product-name">Précisez la catégorie du produit</label>
+    <input type="text" id="other-product-name" placeholder="Entrez une autre catégorie" />
+</div>
+
+<div class="form-group" id="pc-portable-container" style="display: none;">
+<label for="ram-size">Taille de la RAM</label>
+<select id="ram-size" required onchange="updateRAM()">
+<option value="">Choisissez une taille de RAM</option>
+<option value="4GB">4 GB</option>
+<option value="8GB">8 GB</option>
+<option value="16GB">16 GB</option>
+<option value="32GB">32 GB</option>
+</select>
+<label for="ram-type" id="ram-type-label">Type de RAM</label>
+<select type="text" id="ram-type" placeholder="Description du type de RAM" required style="display: none">
+<option value="">Choisissez un type de RAM</option>
+<option value="DDR3">DDR3</option>
+<option value="DDR4">DDR4</option>
+<option value="DDR5">DDR5</option>
+</select>
+</div>
+<div class="form-group" id="pc-fixe-container" style="display: none;">
+<label id="type-stockage-label">Type de stockage</label>
+<form>
+<label for="storage-hdd">HDD</label>
+<input type="checkbox" id="storage-hdd" placeholder="stockage" required>
+<label for="storage-ssd">SSD</label>
+<input type="checkbox" id="storage-ssd" placeholder="capacité" required>
+<label for="storage-nvme">NVME</label>
+<input type="checkbox" id="storage-nvme" placeholder="speed" required>
+</form>
+        <label for="storage-size">Taille du stockage</label>
+        <input type="text" id="storage-size" placeholder="Taille du stockage" required>
+</div>
+
+<div class="form-group" id="cpu-container" style="display: none;">
+<label for="product-processeur">Processeur</label>
+<input type="text" id="product-processeur" placeholder="Description du processeur" required>
+</div>
+<div class="form-group" id="gpu-container" style="display: none;">
+<label for="product-graphique">Carte Graphique</label>
+<input type="text" id="product-graphique" placeholder="Description du graphique" required>
+</div>
 </div>
 
       <div class="form-group">
@@ -185,23 +280,123 @@
     popup.style.display = 'flex';  // Afficher le popup
   }
 
+  function updateRAM() {
+    const selectElement = document.getElementById('ram-size');
+    const otherFieldContainer = document.getElementById('ram-type');
+    const otherFieldLabel = document.getElementById('ram-type-label');
+    const selectedValue = selectElement.value;
+
+    if (selectedValue === '4GB' || selectedValue === '8GB' || selectedValue === '16GB' || selectedValue === '32GB') {
+      otherFieldContainer.style.display = 'block'; // Affiche le champ texte
+      otherFieldLabel.style.display = 'block';
+    } else {
+      otherFieldContainer.style.display = 'none'; // Cache le champ texte
+      otherFieldLabel.style.display = 'none';
+    }
+  }
+
   function createProduct(barcode) {
-    const categorie = document.getElementById('product-name').value.trim();
-    const description = document.getElementById('product-description').value.trim();
+    let categorie = document.getElementById('product-name').value.trim();
+    if (categorie === 'other') {
+      const otherValue = document.getElementById('other-product-name').value.trim();
+      if (!otherValue) {
+        alert("Veuillez préciser la catégorie du produit.");
+        return;
+      }
+      categorie = otherValue; // on remplace "other" par ce que l'utilisateur a saisi
+    }
+    let description = "";
+    const selectedProduct = document.getElementById('product-name').value;
+    if (selectedProduct !== 'Produit1' && selectedProduct !== 'Produit2') {
+      description = document.getElementById('product-description')?.value.trim() || "";
+    }
     const quantite = parseInt(document.getElementById('product-quantity').value.trim(), 10);
+
+    const ram_size = document.getElementById('ram-size').value;  // Récupère la valeur de ram_size
+    const ram_type = document.getElementById('ram-type').value;  // Récupère la valeur de ram_type
+    const stockage_type_hdd = document.getElementById('storage-hdd').checked;
+    const stockage_type_ssd = document.getElementById('storage-ssd').checked;
+    const stockage_type_nvme = document.getElementById('storage-nvme').checked;
+    const stockage_size = document.getElementById('storage-size').value;
+
+    const cpu = document.getElementById('product-processeur').value;
+    const gpu = document.getElementById('product-graphique').value;
     console.log("Quantité récupérée côté frontend:", quantite);  // Vérifie ici
 
-    if (!categorie || !description) {
-      alert("Le nom et la description sont requis.");
+    if (!categorie) {
+      alert("Veuillez choisir une catégorie valide.");
       return;
+    }
+
+    if (isNaN(quantite) || quantite <= 0) {
+      alert("La quantité doit être un nombre positif (minimum 1).");
+      return;
+    }
+
+    let carte_graphique = "", processeur = "", ram = "", stockage = "", rgb = "";
+
+    if (categorie === 'Produit1' || categorie === 'Produit2') {
+      processeur = document.getElementById('product-processeur')?.value.trim() || "";
+      carte_graphique = document.getElementById('product-graphique')?.value.trim() || "";
+      const ramSize = document.getElementById('ram-size')?.value || "";
+      const ramType = document.getElementById('ram-type')?.value || "";
+      ram = ramSize && ramType ? `${ramSize} ${ramType}` : "";
+      stockage = document.getElementById('storage-size')?.value || "";
+
+      // Pour le RGB, mettons une valeur par défaut pour l’instant :
+      rgb = "non";
     }
 
     console.log("Creating product with barcode:", barcode, "categorie:", categorie, "description:", description, "quantite:", quantite);
 
+    const stockageType = {
+      hdd: stockage_type_hdd,
+      ssd: stockage_type_ssd,
+      nvme: stockage_type_nvme
+    };
+
+    if (!ram_type || !ram_type || !stockage_size || !cpu || !gpu || !stockageType) {
+      alert("Tous les champs doivent être remplis.");
+      return;
+    }
+
+    if (!description || description === "") {
+      if (categorie === 'Produit1') {
+        categorie = 'PC Portable';
+        description = 'PC portable';
+      } else if (categorie === 'Produit2') {
+        categorie = 'PC Fixe';
+        description = 'PC fixe';
+      }
+    }
+
     fetch('/create-product', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ barcode, categorie, description, quantite })
+      body: JSON.stringify({ barcode, categorie, description, quantite, ram_size, ram_type, stockage_type: stockageType, stockage_size, cpu, gpu, rgb })
+    })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                alert((data.message || "Produit créé avec succès."));
+                closePopup();
+              } else {
+                alert("Erreur lors de la création du produit.");
+                setTimeout(() => {
+                  window.location.reload(); // Recharge la page après une seconde
+                }, 300);
+              }
+            })
+            .catch(err => {
+              alert("Erreur : " + err.message);
+            });
+  }
+
+  function deleteProduct(barcode) {
+    fetch('/delete-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barcode })
     })
             .then(res => res.json())
             .then(data => {
@@ -210,12 +405,12 @@
                 closePopup();
                 setTimeout(() => {
                   window.location.reload(); // Recharge la page après une seconde
-                }, "1000");
+                }, 300);
               } else {
                 alert("Erreur lors de la création du produit.");
                 setTimeout(() => {
                   window.location.reload(); // Recharge la page après une seconde
-                }, "1000");
+                }, 300);
               }
             })
             .catch(err => {
@@ -224,6 +419,7 @@
   }
 
   function toggleOtherField() {
+    console.log("toggleOtherField called.")
     const selectElement = document.getElementById('product-name');
     const otherFieldContainer = document.getElementById('other-product-container');
     const selectedValue = selectElement.value;
@@ -234,6 +430,38 @@
       otherFieldContainer.style.display = 'none'; // Cache le champ texte
     }
   }
+
+  function togglePcPortableField() {
+    console.log("togglePcPortableField called.")
+    const selectElement = document.getElementById('product-name');
+    const pcPortabelFieldContainer = document.getElementById('pc-portable-container');
+    const descriptionFieldContainer = document.getElementById('description-container');
+    const pcFixeFieldContainer = document.getElementById('pc-fixe-container');
+    const cpuFieldContainer = document.getElementById('cpu-container');
+    const gpuFieldContainer = document.getElementById('gpu-container');
+    const selectedValue = selectElement.value;
+
+    if (selectedValue === 'Produit1' || selectedValue === 'Produit2') {
+      pcPortabelFieldContainer.style.display = 'block'; // Affiche le champ texte
+      descriptionFieldContainer.style.display = 'none'; // Masque le champ description
+      pcFixeFieldContainer.style.display = 'block'; // Masque le champ description
+      cpuFieldContainer.style.display = 'block'; // Masque le champ description
+      gpuFieldContainer.style.display = 'block'; // Masque le champ description
+    } else {
+      pcPortabelFieldContainer.style.display = 'none'; // Cache le champ texte
+      descriptionFieldContainer.style.display = 'block'; // Affiche le champ description
+      pcFixeFieldContainer.style.display = 'none'; // Masque le champ description
+      cpuFieldContainer.style.display = 'none'; // Masque le champ description
+      gpuFieldContainer.style.display = 'none'; // Masque le champ description
+    }
+  }
+
+  function handleSelectChange() {
+    toggleOtherField();
+    togglePcPortableField();
+    updateRAM();
+  }
+
 
   function printBarcode(barcode) {
     const printWindow = window.open('', '', 'width=600,height=400');  // Créer une nouvelle fenêtre pour l'impression
@@ -284,7 +512,9 @@
                 barcodeCell.classList.add('barcode-cell');  // Ajouter la classe "barcode-cell" pour appliquer le style de survol
                 const nameCell = row.insertCell(1);
                 const descriptionCell = row.insertCell(2);
+                descriptionCell.classList.add('description-cell');
                 const quantityCell = row.insertCell(3);
+                quantityCell.classList.add('quantity-cell');
                 const barcodeImageCell = row.insertCell(4); // Nouvelle cellule pour l'image du barcode
                 barcodeImageCell.classList.add('barcode-image-cell'); // Ajouter une classe spécifique à la cellule contenant l'image
 
@@ -292,25 +522,6 @@
                 nameCell.textContent = product.categorie;
                 descriptionCell.textContent = product.description;
                 quantityCell.textContent = product.quantite;
-
-                // Générer l'image du code-barres pour chaque produit
-                const barcodeImage = document.createElement('img');
-                JsBarcode(barcodeImage, product.barcode, {
-                  format: "CODE128",
-                  lineColor: "#000000",
-                  width: 1,  // Augmenter la largeur pour plus de lisibilité
-                  height: 80,  // Ajuster la hauteur pour les rendre plus visibles
-                  displayValue: true,
-                  fontSize: 20,  // Taille de la police pour les valeurs sous le code-barres
-                  margin: 10  // Espacement autour du code-barres pour éviter que la lecture soit coupée
-                });
-
-                barcodeImage.alt = `Code-barres pour ${product.barcode}`;
-                barcodeImage.style.width = '125px';  // Ajuste la taille de l'image
-                barcodeImage.style.height = 'auto';
-
-                // Ajouter l'image du code-barres à la cellule
-                barcodeImageCell.appendChild(barcodeImage);
 
 // Ajouter un événement de clic sur le texte du barcode pour le remplir dans le champ input
                 barcodeCell.addEventListener('click', function() {
@@ -327,19 +538,67 @@
                   inputField.dispatchEvent(enterEvent);  // Déclenche l'événement "keydown" pour simuler l'Entrée
                 });
 
-                // Ajouter un événement de clic uniquement sur l'image pour imprimer le code-barres
-                barcodeImage.addEventListener('click', function() {
-                  printBarcode(product.barcode);  // Appeler la fonction d'impression en cliquant sur l'image du code-barres
+
+                // Ajout de l'écouteur de clic pour la cellule de description
+                descriptionCell.addEventListener('click', () => showPopupPc(product));
+
+                // Générer l'image du code-barres pour chaque produit
+                const barcodeImage = document.createElement('img');
+                JsBarcode(barcodeImage, product.barcode, {
+                  format: "CODE128",
+                  lineColor: "#000000",
+                  width: 1,  // Augmenter la largeur pour plus de lisibilité
+                  height: 80,  // Ajuster la hauteur pour les rendre plus visibles
+                  displayValue: true,
+                  fontSize: 20,  // Taille de la police pour les valeurs sous le code-barres
+                  margin: 10  // Espacement autour du code-barres pour éviter que la lecture soit coupée
                 });
 
+                barcodeImage.alt = `Code-barres pour ${product.barcode}`;
+                barcodeImage.style.width = '125px';  // Ajuste la taille de l'image du code-barres
+                barcodeImageCell.appendChild(barcodeImage);
               });
-
             })
             .catch(err => {
-              console.error('Erreur lors de la récupération des produits', err);
+              console.error("Erreur lors de la récupération des produits :", err);
             });
   }
 
+  // Fonction pour afficher le popup si certaines données sont présentes
+  function showPopupPc(product) {
+    const { ram_size, ram_type, stockage_type, stockage_size, cpu, gpu, rgb} = product;
+
+    console.log("Product details:", stockage_type)
+
+    if (ram_size && ram_type && stockage_type && stockage_size && cpu && gpu) {
+
+      // Créer une chaîne pour le type de stockage
+      const stockageDetails = Object.keys(stockage_type)
+              .filter(key => stockage_type[key])  // Filtrer les clés qui ont la valeur true
+              .map(key => key.toUpperCase())      // Convertir en majuscules (hdd, ssd, nvme)
+              .join(', ');                        // Joindre les clés par des virgules
+      // Afficher le popup avec ces informations
+      showPopup({
+        title: "Détails PC",
+        desc: `
+      <strong>RAM :</strong> ${ram_size} ${ram_type}<br>
+      <strong>Stockage :</strong> ${stockage_size} <br>
+      <strong>Type de Stockage :</strong> ${stockageDetails}<br>
+      <strong>Processeur :</strong> ${cpu}<br>
+      <strong>Carte graphique :</strong> ${gpu}<br>
+      <strong>Boitier RGB / Eclairé :</strong> ${rgb}
+      `,
+        actions: []
+      });
+    } else {
+      // Si l'une des informations est manquante, on ne fait rien ou on affiche un message différent
+      showPopup({
+        title: "Le produit n'est pas un PC",
+        desc: "Le produit n'a pas toutes les informations nécessaires pour être considéré comme un PC.",
+        actions: []
+      });
+    }
+  }
 
   // Appeler la fonction pour récupérer et afficher les produits dès que la page est chargée
   document.addEventListener('DOMContentLoaded', fetchProducts);
@@ -353,6 +612,11 @@
     <div id="popup-actions"></div>
     <button onclick="closePopup()">Retour</button>
   </div>
+</div>
+
+
+<div id="descPopup" class="desc-popup">
+
 </div>
 
 </body>

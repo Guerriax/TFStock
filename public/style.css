@@ -207,6 +207,26 @@ input[type="number"] {
     transform: scale(1);  /* Retour à la taille normale lorsqu'on clique */
 }
 
+#products-table td.description-cell {
+    cursor: pointer;
+    background-color: #27c1d5;  /* Couleur de fond verte (comme un bouton) */
+    color: white;  /* Texte blanc pour contraster avec le fond vert */
+    padding: 10px 15px;  /* Espacement autour du texte pour lui donner un effet de bouton */
+    border-radius: 5px;  /* Coins arrondis */
+    text-align: center;  /* Centrer le texte dans la cellule */
+    transition: background-color 0.3s ease, transform 0.3s ease;  /* Transition pour un effet doux */
+}
+
+#products-table td.description-cell:hover {
+    background-color: #23b1c5;  /* Une nuance légèrement plus sombre de vert au survol */
+    transform: scale(1.05);  /* Un léger agrandissement au survol pour l'effet de bouton */
+}
+
+#products-table td.description-cell:active {
+    background-color: #1da1b5;  /* Couleur encore plus sombre lors du clic */
+    transform: scale(1);  /* Retour à la taille normale lorsqu'on clique */
+}
+
 /* Appliquer le curseur imprimante uniquement sur l'image du code-barres */
 #products-table td img:hover {
     cursor: url('./assets/imprimante.svg') 16 16, pointer;  /* 16 16 définit la position du hotspot */
@@ -225,6 +245,23 @@ input[type="number"] {
     cursor: pointer;
 }
 
+#del-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 98px;
+    padding: 10px 20px;
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
 #help-btn:hover {
     background-color: #45a049;
+}
+
+#ram-size {
+    display: block;
 }
