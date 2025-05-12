@@ -134,5 +134,8 @@ Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus d'informations
 
 Merci d'avoir consulté ce projet ! Si vous avez des questions ou des suggestions, n'hésitez pas à ouvrir une issue ou à contacter les contributeurs.
 
-Auteur : Guerriax
-Date de mise à jour : Mai 2025
+Auteur : **Guerriax**
+Version : **1.0.0**
+Date de mise à jour : **Mai 2025**
+
+---
